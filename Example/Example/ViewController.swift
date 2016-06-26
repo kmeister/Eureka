@@ -1,7 +1,7 @@
 //  ViewController.swift
 //  Eureka ( https://github.com/xmartlabs/Eureka )
 //
-//  Copyright (c) 2015 Xmartlabs ( http://xmartlabs.com )
+//  Copyright (c) 2016 Xmartlabs ( http://xmartlabs.com )
 //
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -38,9 +38,9 @@ class HomeViewController : FormViewController {
            cell.accessoryView?.frame = CGRectMake(0, 0, 34, 34)
         }
         
-        form  +++=
+        form =
             
-            Section(footer: "These are 10 ButtonRow rows") {
+            Section() {
                 $0.header = HeaderFooterView<EurekaLogoView>(HeaderFooterProvider.Class)
             }
         
@@ -92,9 +92,24 @@ class HomeViewController : FormViewController {
                     row.title = row.tag
                     row.presentationMode = .SegueName(segueName: "ListSectionsControllerSegue", completionCallback: nil)
                 }
+        +++ Section()
+                <<< ButtonRow() { (row: ButtonRow) -> Void in
+                   row.title = "About"
+                }  .onCellSelection({ (cell, row) in
+                    self.showAlert()
+                })
     }
+    
+    
+    @IBAction func showAlert() {
+        let alertController = UIAlertController(title: "OnCellSelection", message: "Button Row Action", preferredStyle: .Alert)
+        let defaultAction = UIAlertAction(title: "OK", style: .Default, handler: nil)
+        alertController.addAction(defaultAction)
+        presentViewController(alertController, animated: true, completion: nil)
+        
+    }
+    
 }
-
 //MARK: Emoji
 
 typealias Emoji = String
@@ -120,7 +135,11 @@ class RowsExampleViewController: FormViewController {
                         $0.title = "LabelRow"
                         $0.value = "tap the row"
                     }
-                    .onCellSelection { $0.cell.detailTextLabel?.text? += " 🇺🇾 " }
+                    .onCellSelection { cell, row in
+                        row.title = (row.title ?? "") + " 🇺🇾 "
+                        row.reload() // or row.updateCell()
+                    }
+            
             
                 <<< DateRow() { $0.value = NSDate(); $0.title = "DateRow" }
                 
@@ -133,6 +152,16 @@ class RowsExampleViewController: FormViewController {
                         $0.title = "SwitchRow"
                         $0.value = true
                     }
+            
+                <<< SliderRow() {
+                    $0.title = "SliderRow"
+                    $0.value = 5.0
+                }
+            
+                <<< StepperRow() {
+                    $0.title = "StepperRow"
+                    $0.value = 1.0
+                }
             
             +++ Section("SegmentedRow examples")
             
@@ -186,6 +215,21 @@ class RowsExampleViewController: FormViewController {
                         $0.selectorTitle = "Choose an Emoji!"
                     }
             
+        
+        if UIDevice.currentDevice().userInterfaceIdiom == .Pad {
+            let section = form.last!
+        
+            section <<< PopoverSelectorRow<Emoji>() {
+                    $0.title = "PopoverSelectorRow"
+                    $0.options = [💁🏻, 🍐, 👦🏼, 🐗, 🐼, 🐻]
+                    $0.value = 💁🏻
+                    $0.selectorTitle = "Choose an Emoji!"
+                }
+        }
+        
+        let section = form.last!
+                    
+        section
                 <<< LocationRow(){
                         $0.title = "LocationRow"
                         $0.value = CLLocation(latitude: -34.91, longitude: -56.1646)
@@ -201,10 +245,10 @@ class RowsExampleViewController: FormViewController {
                         $0.value = [👦🏼, 🍐, 🐗]
                     }
                     .onPresent { from, to in
-                        to.navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .Done, target: from, action: "multipleSelectorDone:")
+                        to.navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .Done, target: from, action: #selector(RowsExampleViewController.multipleSelectorDone(_:)))
                     }
             
-            +++ Section("Generic picker")
+        form +++ Section("Generic picker")
             
                 <<< PickerRow<String>("Picker Row") { (row : PickerRow<String>) -> Void in
                 
@@ -225,6 +269,11 @@ class RowsExampleViewController: FormViewController {
                 <<< DecimalRow() {
                         $0.title = "DecimalRow"
                         $0.value = 5
+                        $0.formatter = DecimalFormatter()
+                        $0.useFormatterDuringInput = true
+                        //$0.useFormatterOnDidBeginEditing = true
+                    }.cellSetup { cell, _  in
+                        cell.textField.keyboardType = .NumberPad
                     }
                 
                 <<< URLRow() {
@@ -274,7 +323,7 @@ class RowsExampleViewController: FormViewController {
 			
 			+++ Section("PostalAddressRow example")
 			
-				<<< PostalAddressRow<PostalAddress>(){
+				<<< PostalAddressRow(){
 					$0.title = "Address"
 					$0.streetPlaceholder = "Street"
 					$0.statePlaceholder = "State"
@@ -307,7 +356,7 @@ class CustomCellsController : FormViewController {
         form +++
             Section() {
                 var header = HeaderFooterView<EurekaLogoViewNib>(HeaderFooterProvider.NibFile(name: "EurekaSectionHeader", bundle: nil))
-                header.onSetupView = { (view, section, form) -> () in
+                header.onSetupView = { (view, section) -> () in
                                             view.imageView.alpha = 0;
                                             UIView.animateWithDuration(2.0, animations: { [weak view] in
                                                 view?.imageView.alpha = 1
@@ -404,7 +453,10 @@ class FieldRowCustomizationController : FormViewController {
         
             +++ Section("TextAreaRow")
         
-                <<< TextAreaRow() { $0.placeholder = "TextAreaRow" }
+                <<< TextAreaRow() {
+                    $0.placeholder = "TextAreaRow"
+                    $0.textAreaHeight = .Dynamic(initialTextViewHeight: 110)
+                }
         
             }
 }
@@ -509,7 +561,7 @@ class NativeEventFormViewController : FormViewController {
         initializeForm()
         
         self.navigationItem.leftBarButtonItem?.target = self
-        self.navigationItem.leftBarButtonItem?.action = "cancelTapped:"
+        self.navigationItem.leftBarButtonItem?.action = #selector(NativeEventFormViewController.cancelTapped(_:))
     }
     
     private func initializeForm() {
@@ -525,7 +577,7 @@ class NativeEventFormViewController : FormViewController {
                 }
         
             +++
-            
+    
                 SwitchRow("All-day") {
                     $0.title = $0.tag
                 }.onChange { [weak self] row in
@@ -549,7 +601,7 @@ class NativeEventFormViewController : FormViewController {
                     startDate.inlineRow?.updateCell()
                     endDate.inlineRow?.updateCell()
                 }
-            
+        
             <<< DateTimeInlineRow("Starts") {
                     $0.title = $0.tag
                     $0.value = NSDate().dateByAddingTimeInterval(60*60*24)
@@ -659,6 +711,7 @@ class NativeEventFormViewController : FormViewController {
         
             <<< TextAreaRow("notes") {
                     $0.placeholder = "Notes"
+                    $0.textAreaHeight = .Dynamic(initialTextViewHeight: 50)
                 }
         
     }
@@ -899,9 +952,8 @@ class FormatterExample : FormViewController {
     class CurrencyFormatter : NSNumberFormatter, FormatterProtocol {
         override func getObjectValue(obj: AutoreleasingUnsafeMutablePointer<AnyObject?>, forString string: String, errorDescription error: AutoreleasingUnsafeMutablePointer<NSString?>) -> Bool {
             guard obj != nil else { return false }
-            var str : String
-            str = string.componentsSeparatedByCharactersInSet(NSCharacterSet.decimalDigitCharacterSet().invertedSet).joinWithSeparator("")
-            obj.memory = NSNumber(float: (Float(str) ?? 0.0)/Float(100))
+            let str = string.componentsSeparatedByCharactersInSet(NSCharacterSet.decimalDigitCharacterSet().invertedSet).joinWithSeparator("")
+            obj.memory = NSNumber(double: (Double(str) ?? 0.0)/Double(pow(10.0, Double(minimumFractionDigits))))
             return true
         }
         
@@ -977,16 +1029,10 @@ class InlineRowsController: FormViewController {
         +++ Section("Generic inline picker")
             
             <<< PickerInlineRow<NSDate>("PickerInlineRow") { (row : PickerInlineRow<NSDate>) -> Void in
-            
                     row.title = row.tag
-                    row.displayValueFor = {
-                        guard let date = $0 else{
-                            return nil
-                        }
-                        let year = NSCalendar.currentCalendar().component(.Year, fromDate: date)
-                        return "Year \(year)"
+                    row.displayValueFor = { (rowValue: NSDate?) in
+                        return rowValue.map { "Year \(NSCalendar.currentCalendar().component(.Year, fromDate: $0))" }
                     }
-                
                     row.options = []
                     var date = NSDate()
                     for _ in 1...10{

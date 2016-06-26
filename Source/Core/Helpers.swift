@@ -1,7 +1,7 @@
 //  Helpers.swift
 //  Eureka ( https://github.com/xmartlabs/Eureka )
 //
-//  Copyright (c) 2015 Xmartlabs ( http://xmartlabs.com )
+//  Copyright (c) 2016 Xmartlabs ( http://xmartlabs.com )
 //
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -69,7 +69,7 @@ extension NSExpression {
             case .FunctionExpressionType, .VariableExpressionType:
                 let str = "\(self)"
                 if let range = str.rangeOfString("."){
-                    return [str.substringWithRange(Range(start: str.startIndex.advancedBy(1), end:range.startIndex))]
+                    return [str.substringWithRange(str.startIndex.advancedBy(1)..<range.startIndex)]
                 }
                 else{
                     return [str.substringFromIndex(str.startIndex.advancedBy(1))]
